@@ -1,0 +1,35 @@
+# Fulcrum Event Ingestion Service
+
+A Go service for ingesting behavioral events from ecommerce sites.
+
+## Setup
+
+1. Start PostgreSQL:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Build and run:
+   ```bash
+   make build
+   make run
+   ```
+
+## API
+
+- `POST /v1/events`: Ingest single event.
+- `POST /v1/events/batch`: Ingest up to 500 events.
+- `GET /healthz`: Health check.
+- `GET /metrics`: Prometheus metrics.
+
+## Testing
+
+Run tests:
+```bash
+make test
+```
+
+## Notes
+
+- Uses Go 1.26.
+- Dependencies may need adjustment for older Go versions.
