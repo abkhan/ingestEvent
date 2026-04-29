@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"fulcrum-test/stores"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +19,7 @@ func TestIntegrationBatch(t *testing.T) {
 		fulcrumURL = "http://localhost:8080"
 	}
 
-	events := []Event{
+	events := []stores.Event{
 		{
 			EventID:    "int123",
 			TenantID:   "tenant1",
@@ -32,8 +34,12 @@ func TestIntegrationBatch(t *testing.T) {
 	reqBody := map[string]interface{}{"events": events}
 	body, _ := json.Marshal(reqBody)
 
+	req, _ := http.NewRequest("POST", fulcrumURL+"/v1/events/batch", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer default-key")
+
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Post(fulcrumURL+"/v1/events/batch", "application/json", bytes.NewReader(body))
+	resp, err := client.Do(req)
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 

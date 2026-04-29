@@ -31,7 +31,10 @@ services:
       DB_NAME: fulcrum
 
   test:
-    build: .
+    image: golang:alpine
+    working_dir: /app
+    volumes:
+      - .:/app
     command: go test -v ./... -run TestIntegration
     depends_on:
       fulcrum:
