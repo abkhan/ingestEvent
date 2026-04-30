@@ -16,7 +16,7 @@ import (
 func TestIntegrationBatch(t *testing.T) {
 	fulcrumURL := os.Getenv("FULCRUM_URL")
 	if fulcrumURL == "" {
-		fulcrumURL = "http://localhost:8080"
+		t.Skip("Skipping integration test because FULCRUM_URL is not set")
 	}
 
 	events := []stores.Event{

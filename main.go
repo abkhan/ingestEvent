@@ -15,7 +15,6 @@ import (
 	"fulcrum-test/stores"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -34,10 +33,9 @@ func main() {
 	}()
 
 	// Initialize metrics
-	metrics := handlers.NewMetrics(prometheus.DefaultRegisterer)
-	if err := metrics.Register(prometheus.DefaultRegisterer); err != nil {
-		log.Fatal(err)
-	}
+	log.Println("Registering metrics...")
+	metrics := handlers.NewMetrics(nil)
+	log.Println("Metrics initialization complete")
 
 	// Initialize handlers
 	ingest := handlers.NewIngestHandler(stores, metrics)
@@ -45,18 +43,21 @@ func main() {
 	// Setup gin router
 	r := gin.New()
 
-	// Apply middlewares
-	r.Use(middlewares.APIKeyAuth(cfg.Middlewares.APIKey))
-	r.Use(middlewares.RateLimit(cfg.Middlewares.RateLimit))
-	r.Use(middlewares.NewCircuitBreaker(cfg.Middlewares.CircuitBreaker.FailureThreshold, cfg.Middlewares.CircuitBreaker.Timeout).Handler())
-
-	// Routes
-	r.POST("/v1/events", gin.WrapF(ingest.HandleSingle))
-	r.POST("/v1/events/batch", gin.WrapF(ingest.HandleBatch))
+	// Routes without auth
 	r.GET("/healthz", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+	// API routes with middleware
+	api := r.Group("")
+	api.Use(middlewares.APIKeyAuth(cfg.Middlewares.APIKey))
+	api.Use(middlewares.RateLimit(cfg.Middlewares.RateLimit))
+	api.Use(middlewares.NewCircuitBreaker(cfg.Middlewares.CircuitBreaker.FailureThreshold, cfg.Middlewares.CircuitBreaker.Timeout).Handler())
+
+	// Routes
+	api.POST("/v1/events", gin.WrapF(ingest.HandleSingle))
+	api.POST("/v1/events/batch", gin.WrapF(ingest.HandleBatch))
 
 	// Start server
 	server := &http.Server{

@@ -174,7 +174,12 @@ type Metrics struct {
 }
 
 func NewMetrics(reg prometheus.Registerer) *Metrics {
-	return &Metrics{
+	useDefault := false
+	if reg == nil {
+		reg = prometheus.DefaultRegisterer
+		useDefault = true
+	}
+	m := &Metrics{
 		EventsTotal: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Name: "ingest_events_total",
 			Help: "Total number of ingested events",
@@ -199,9 +204,7 @@ func NewMetrics(reg prometheus.Registerer) *Metrics {
 			Help: "Total number of dropped duplicate events",
 		}, []string{"tenant"}),
 	}
-}
-
-func (m *Metrics) Register(reg prometheus.Registerer) error {
+	// Register all metrics
 	collectors := []prometheus.Collector{
 		m.EventsTotal,
 		m.RequestDuration,
@@ -209,10 +212,22 @@ func (m *Metrics) Register(reg prometheus.Registerer) error {
 		m.AnalyticalFlushDuration,
 		m.DroppedDuplicates,
 	}
-	for _, c := range collectors {
-		if err := reg.Register(c); err != nil {
-			return err
+
+	if useDefault {
+		prometheus.MustRegister(collectors...)
+	} else {
+		for _, c := range collectors {
+			if err := reg.Register(c); err != nil {
+				log.Fatalf("failed to register metric: %v", err)
+			}
 		}
 	}
-	return nil
+
+	// Pre-create zero-value label combinations so vector metrics are visible on /metrics
+	m.EventsTotal.WithLabelValues("unknown", "success")
+	m.RequestDuration.WithLabelValues("/startup")
+	m.DroppedDuplicates.WithLabelValues("unknown")
+
+	log.Println("All metrics registered successfully")
+	return m
 }

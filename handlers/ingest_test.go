@@ -38,7 +38,6 @@ func TestHandleSingle(t *testing.T) {
 
 	reg := prometheus.NewRegistry()
 	metrics := NewMetrics(reg)
-	metrics.Register(reg)
 
 	// Mock store
 	mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM events WHERE event_id = \\$1 AND occurred_at > NOW\\(\\) - INTERVAL '24 hours'").
@@ -80,7 +79,6 @@ func TestHandleBatch(t *testing.T) {
 
 	reg := prometheus.NewRegistry()
 	metrics := NewMetrics(reg)
-	metrics.Register(reg)
 
 	events := []stores.Event{
 		{

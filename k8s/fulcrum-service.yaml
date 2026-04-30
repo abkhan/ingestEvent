@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fulcrum-service
+  labels:
+    app: fulcrum
+spec:
+  type: LoadBalancer
+  selector:
+    app: fulcrum
+  ports:
+    - name: http
+      port: 8083
+      targetPort: 8080
