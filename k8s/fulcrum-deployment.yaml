@@ -18,7 +18,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: fulcrum
-          image: ghcr.io/abkhan/ingestevent:release_1
+          image: ghcr.io/abkhan/ingestevent:v1.0.4
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
